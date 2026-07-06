@@ -1,14 +1,12 @@
 {
-  "name": "react-example",
+  "name": "smart-onboarding-frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node server.js",
+    "dev": "vite",
     "build": "vite build",
-    "start": "NODE_ENV=production node server.js",
-    "preview": "vite preview",
-    "clean": "rm -rf dist"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -16,28 +14,17 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@tailwindcss/vite": "^4.1.14",
     "@vitejs/plugin-react": "^5.0.4",
-    "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
-    "cors": "^2.8.6",
-    "dotenv": "^17.2.3",
-    "express": "^4.22.2",
-    "groq-sdk": "^1.3.0",
-    "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.546.0",
-    "mammoth": "^1.12.0",
-    "mongoose": "^9.7.3",
     "motion": "^12.23.24",
-    "multer": "^2.2.0",
-    "pdf-parse": "^2.4.5",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
     "react-router-dom": "^7.18.1",
     "tailwind-merge": "^3.6.0",
+    "tailwindcss": "^4.1.14",
     "vite": "^6.2.3"
   },
   "devDependencies": {
-    "autoprefixer": "^10.4.21",
-    "tailwindcss": "^4.1.14",
-    "vite": "^6.2.3"
+    "autoprefixer": "^10.4.21"
   }
 }
