@@ -9,11 +9,8 @@ import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const pdfParse = require('pdf-parse');
 import mammoth from 'mammoth';
-import path from 'path';
-import { createServer as createViteServer } from 'vite';
-
-import { User, Group, Task, Document, Team } from './src/server/models.js';
-import { generateAndAssignTasks } from './src/server/ai.js';
+import { User, Group, Task, Document, Team } from './src/models.js';
+import { generateAndAssignTasks } from './src/ai.js';
 
 const app = express();
 app.use(cors());
@@ -543,24 +540,6 @@ app.put('/api/employee/status', checkDb, authMiddleware, async (req, res) => {
   }
 });
 
-async function startServer() {
-  if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
-  }
-
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
-}
-
-startServer();
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
