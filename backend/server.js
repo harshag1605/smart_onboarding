@@ -118,6 +118,12 @@ app.post('/api/auth/register', checkDb, async (req, res) => {
     const existing = await User.findOne({ email });
     if (existing) return res.status(400).json({ error: 'Email already in use' });
 
+    if (role === 'employee') {
+      if (!designations || designations.length === 0) return res.status(400).json({ error: 'At least one designation is required for employees' });
+      if (!department) return res.status(400).json({ error: 'Department is required for employees' });
+      if (!group) return res.status(400).json({ error: 'Group is required for employees' });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
     await User.create({
       name, email, password: hashedPassword, role,
@@ -533,6 +539,25 @@ app.put('/api/employee/status', checkDb, authMiddleware, async (req, res) => {
   try {
     const { workingStatus } = req.body;
     const user = await User.findByIdAndUpdate(req.user.id, { workingStatus }, { new: true });
+    await autoAssignTasks();
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/employee/profile', checkDb, authMiddleware, async (req, res) => {
+  try {
+    const { name, department, group, designations } = req.body;
+    
+    if (!designations || designations.length === 0) return res.status(400).json({ error: 'At least one designation is required' });
+    if (!department) return res.status(400).json({ error: 'Department is required' });
+    if (!group) return res.status(400).json({ error: 'Group is required' });
+
+    const user = await User.findByIdAndUpdate(req.user.id, {
+      name, department, group, designations
+    }, { new: true }).select('-password');
+
     await autoAssignTasks();
     res.json(user);
   } catch (error) {

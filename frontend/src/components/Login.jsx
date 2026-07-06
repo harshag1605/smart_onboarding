@@ -13,6 +13,16 @@ const PREDEFINED_DESIGNATIONS = [
   "Systems Administrator", "Documentation Specialist"
 ];
 
+export const PREDEFINED_DEPARTMENTS = [
+  "Engineering", "Design", "Quality Assurance", 
+  "Product", "Operations", "Information Technology"
+];
+export const PREDEFINED_GROUPS = [
+  "Frontend Squad", "Backend API Team", "Mobile App Group", 
+  "QA & Automation", "DevOps & Cloud", "Data & Analytics", 
+  "Product Management", "Security Team", "IT Support"
+];
+
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -42,6 +52,22 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!isLogin && role === 'employee') {
+      if (designations.length === 0) {
+        setError('Please select at least one designation.');
+        return;
+      }
+      if (!department.trim()) {
+        setError('Please enter your department.');
+        return;
+      }
+      if (!group.trim()) {
+        setError('Please enter your group.');
+        return;
+      }
+    }
+
     setLoading(true);
 
     const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
@@ -227,8 +253,11 @@ export default function Login() {
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-400">
                               <Building className="w-4 h-4" />
                             </div>
-                            <input type="text" value={department} onChange={e => setDepartment(e.target.value)} placeholder="Engineering" 
-                                   className="block w-full pl-9 bg-zinc-50 border-2 border-transparent rounded-xl py-3 text-zinc-900 transition-all focus:bg-white focus:border-yellow-400 outline-none text-sm placeholder-zinc-400" />
+                            <select required value={department} onChange={e => setDepartment(e.target.value)} 
+                                   className="block w-full pl-9 bg-zinc-50 border-2 border-transparent rounded-xl py-3 text-zinc-900 transition-all focus:bg-white focus:border-yellow-400 outline-none text-sm appearance-none">
+                              <option value="" disabled>Select Department</option>
+                              {PREDEFINED_DEPARTMENTS.map(dep => <option key={dep} value={dep}>{dep}</option>)}
+                            </select>
                           </div>
                         </div>
                         <div>
@@ -237,14 +266,17 @@ export default function Login() {
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-400">
                               <Users className="w-4 h-4" />
                             </div>
-                            <input type="text" value={group} onChange={e => setGroup(e.target.value)} placeholder="Backend" 
-                                   className="block w-full pl-9 bg-zinc-50 border-2 border-transparent rounded-xl py-3 text-zinc-900 transition-all focus:bg-white focus:border-yellow-400 outline-none text-sm placeholder-zinc-400" />
+                            <select required value={group} onChange={e => setGroup(e.target.value)} 
+                                   className="block w-full pl-9 bg-zinc-50 border-2 border-transparent rounded-xl py-3 text-zinc-900 transition-all focus:bg-white focus:border-yellow-400 outline-none text-sm appearance-none">
+                              <option value="" disabled>Select Group</option>
+                              {PREDEFINED_GROUPS.map(grp => <option key={grp} value={grp}>{grp}</option>)}
+                            </select>
                           </div>
                         </div>
                       </div>
                     </>
                   )}
-                </>
+                </div>
               )}
 
               <button type="submit" disabled={loading} 
