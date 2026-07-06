@@ -1,8 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
-import { Clock, PlayCircle, CheckCircle2, LayoutDashboard, Users, Trophy, ChevronRight, Award, Briefcase, Star } from 'lucide-react';
+import { Clock, PlayCircle, CheckCircle2, LayoutDashboard, Users, Trophy, ChevronRight, Award, Briefcase, Star, User } from 'lucide-react';
 
 const COLUMNS = ['Open', 'Todo', 'In Progress', 'Done'];
+
+const PREDEFINED_DESIGNATIONS = [
+  "Frontend Engineer", "Backend Engineer", "Fullstack Developer",
+  "UI/UX Designer", "QA Engineer", "Automation Tester",
+  "DevOps Engineer", "Cloud Architect", "Security Engineer",
+  "Database Administrator", "Performance Optimizer", "Build & Release Engineer",
+  "Mobile App Developer", "Product Manager", "Scrum Master",
+  "Tech Lead", "Data Engineer", "Site Reliability Engineer",
+  "Systems Administrator", "Documentation Specialist"
+];
+
+const PREDEFINED_DEPARTMENTS = [
+  "Engineering", "Design", "Quality Assurance", 
+  "Product", "Operations", "Information Technology"
+];
+const PREDEFINED_GROUPS = [
+  "Frontend Squad", "Backend API Team", "Mobile App Group", 
+  "QA & Automation", "DevOps & Cloud", "Data & Analytics", 
+  "Product Management", "Security Team", "IT Support"
+];
 
 export default function EmployeeDashboard() {
   const { user, token, logout } = useAuth();
@@ -12,6 +32,12 @@ export default function EmployeeDashboard() {
   const [workingStatus, setWorkingStatus] = useState(user?.workingStatus || 'Available');
   const [activeTab, setActiveTab] = useState('tasks');
 
+  const [profileName, setProfileName] = useState(user?.name || '');
+  const [profileDepartment, setProfileDepartment] = useState(user?.department || '');
+  const [profileGroup, setProfileGroup] = useState(user?.group || '');
+  const [profileDesignations, setProfileDesignations] = useState(user?.designations || []);
+  const [profileMessage, setProfileMessage] = useState('');
+  const [profileLoading, setProfileLoading] = useState(false);
   const headers = { Authorization: `Bearer ${token}` };
 
   const fetchDashboardData = async () => {
@@ -79,6 +105,39 @@ export default function EmployeeDashboard() {
   const myRankIndex = performers.findIndex(p => p.employee?._id === user?.id);
   const myRank = myRankIndex !== -1 ? myRankIndex + 1 : '-';
 
+  const handleProfileDesignationChange = (d) => {
+    if (profileDesignations.includes(d)) {
+      setProfileDesignations(profileDesignations.filter(x => x !== d));
+    } else {
+      setProfileDesignations([...profileDesignations, d]);
+    }
+  };
+
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    setProfileMessage('');
+    setProfileLoading(true);
+    try {
+      const res = await fetch('/api/employee/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...headers },
+        body: JSON.stringify({ 
+          name: profileName, 
+          department: profileDepartment, 
+          group: profileGroup, 
+          designations: profileDesignations 
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update profile');
+      setProfileMessage('Profile updated successfully! Refresh to see changes globally.');
+    } catch (err) {
+      setProfileMessage(err.message);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 font-sans bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-white via-gray-50 to-gray-200">
       <nav className="bg-white/50 backdrop-blur-xl border-b border-gray-200 px-6 py-4 flex flex-col md:flex-row justify-between items-center shadow-[0_4px_20px_rgba(0,0,0,0.3)] sticky top-0 z-10 gap-4 md:gap-0">
@@ -91,6 +150,7 @@ export default function EmployeeDashboard() {
             <button onClick={() => setActiveTab('tasks')} className={`text-xs px-3 py-1.5 rounded-lg font-bold uppercase tracking-wider transition-all ${activeTab === 'tasks' ? 'bg-yellow-400 text-gray-900' : 'bg-gray-50 text-gray-500 hover:text-gray-900'}`}>My Tasks</button>
             <button onClick={() => setActiveTab('teams')} className={`text-xs px-3 py-1.5 rounded-lg font-bold uppercase tracking-wider transition-all ${activeTab === 'teams' ? 'bg-yellow-400 text-gray-900' : 'bg-gray-50 text-gray-500 hover:text-gray-900'}`}>My Teams</button>
             <button onClick={() => setActiveTab('leaderboard')} className={`text-xs px-3 py-1.5 rounded-lg font-bold uppercase tracking-wider transition-all ${activeTab === 'leaderboard' ? 'bg-yellow-400 text-gray-900' : 'bg-gray-50 text-gray-500 hover:text-gray-900'}`}>Leaderboard</button>
+            <button onClick={() => setActiveTab('profile')} className={`text-xs px-3 py-1.5 rounded-lg font-bold uppercase tracking-wider transition-all ${activeTab === 'profile' ? 'bg-yellow-400 text-gray-900' : 'bg-gray-50 text-gray-500 hover:text-gray-900'}`}>My Profile</button>
           </div>
           <div className="flex items-center gap-4 ml-auto">
             <select 
@@ -258,6 +318,70 @@ export default function EmployeeDashboard() {
               })}
               {performers.length === 0 && <div className="p-8 text-center text-gray-500 text-sm">No tasks completed yet globally.</div>}
             </div>
+          </div>
+        )}
+        {activeTab === 'profile' && (
+          <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden p-8 max-w-3xl mx-auto">
+            <h2 className="text-xl font-black text-gray-900 flex items-center gap-2 mb-6 border-b border-gray-100 pb-4">
+              <User className="text-yellow-500"/> Edit My Profile
+            </h2>
+            
+            {profileMessage && (
+              <div className={`p-4 mb-6 rounded-xl text-sm font-bold ${profileMessage.includes('successfully') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                {profileMessage}
+              </div>
+            )}
+
+            <form onSubmit={handleProfileUpdate} className="space-y-6">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Full Name</label>
+                <input type="text" required value={profileName} onChange={e => setProfileName(e.target.value)}
+                       className="block w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 text-gray-900 transition-all focus:bg-white focus:border-yellow-400 outline-none text-sm" />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Department</label>
+                  <select required value={profileDepartment} onChange={e => setProfileDepartment(e.target.value)}
+                         className="block w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 text-gray-900 transition-all focus:bg-white focus:border-yellow-400 outline-none text-sm appearance-none">
+                    <option value="" disabled>Select Department</option>
+                    {PREDEFINED_DEPARTMENTS.map(dep => <option key={dep} value={dep}>{dep}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Group</label>
+                  <select required value={profileGroup} onChange={e => setProfileGroup(e.target.value)}
+                         className="block w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 text-gray-900 transition-all focus:bg-white focus:border-yellow-400 outline-none text-sm appearance-none">
+                    <option value="" disabled>Select Group</option>
+                    {PREDEFINED_GROUPS.map(grp => <option key={grp} value={grp}>{grp}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Designations</label>
+                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 max-h-64 overflow-y-auto space-y-3">
+                  {PREDEFINED_DESIGNATIONS.map(d => (
+                    <label key={d} className="flex items-start gap-3 group cursor-pointer">
+                      <div className="relative flex items-center justify-center mt-0.5">
+                        <input type="checkbox" checked={profileDesignations.includes(d)} onChange={() => handleProfileDesignationChange(d)} 
+                               className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded focus:ring-4 focus:ring-yellow-400/20 checked:border-yellow-500 checked:bg-yellow-500 transition-all" />
+                        <svg className="absolute w-3 h-3 text-gray-900 pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 14 10" fill="none">
+                          <path d="M1 5L4.5 8.5L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <span className="text-sm font-medium text-gray-600 group-hover:text-gray-900 transition-colors">{d}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-4 flex justify-end">
+                <button type="submit" disabled={profileLoading} className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold px-8 py-3 rounded-xl transition-all shadow-sm flex items-center gap-2">
+                  {profileLoading ? 'Saving...' : 'Save Profile'}
+                </button>
+              </div>
+            </form>
           </div>
         )}
       </main>
