@@ -13,7 +13,14 @@ import { User, Group, Task, Document, Team } from './src/models.js';
 import { generateAndAssignTasks } from './src/ai.js';
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'https://smart-onboarding-zeta.vercel.app'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
