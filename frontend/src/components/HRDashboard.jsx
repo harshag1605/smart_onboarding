@@ -45,11 +45,11 @@ export default function HRDashboard() {
     try {
       const opts = { headers };
       const [empRes, teamRes, taskRes, docRes, perfRes] = await Promise.all([
-        fetch('/api/hr/employees', opts),
-        fetch('/api/hr/teams', opts),
-        fetch('/api/hr/tasks', opts),
-        fetch('/api/hr/documents', opts),
-        fetch('/api/hr/analytics/performers', opts)
+        fetch(`${import.meta.env.VITE_API_URL}/api/hr/employees`, opts),
+        fetch(`${import.meta.env.VITE_API_URL}/api/hr/teams`, opts),
+        fetch(`${import.meta.env.VITE_API_URL}/api/hr/tasks`, opts),
+        fetch(`${import.meta.env.VITE_API_URL}/api/hr/documents`, opts),
+        fetch(`${import.meta.env.VITE_API_URL}/api/hr/analytics/performers`, opts)
       ]);
       setEmployees(await empRes.json());
       setTeams(await teamRes.json());
@@ -81,7 +81,7 @@ export default function HRDashboard() {
     formData.append('title', docTitle);
 
     try {
-      const res = await fetch('/api/hr/upload', { method: 'POST', headers, body: formData });
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/hr/upload`, { method: 'POST', headers, body: formData });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setMessage(data.message);
@@ -102,7 +102,7 @@ export default function HRDashboard() {
       return;
     }
     try {
-      const res = await fetch(`/api/hr/documents/${docId}/live`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/hr/documents/${docId}/live`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...headers },
         body: JSON.stringify({ teamId })
@@ -118,7 +118,7 @@ export default function HRDashboard() {
   const handleCreateTeam = async (e) => {
     e.preventDefault();
     try {
-      await fetch('/api/hr/teams', {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/hr/teams`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...headers },
         body: JSON.stringify({ name: newTeamName })
@@ -131,7 +131,7 @@ export default function HRDashboard() {
   const handleAddEmployee = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('/api/auth/register', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -151,7 +151,7 @@ export default function HRDashboard() {
   const handleAddMemberToTeam = async (teamId, employeeId) => {
     if(!employeeId) return;
     try {
-      await fetch(`/api/hr/teams/${teamId}/members`, {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/hr/teams/${teamId}/members`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...headers },
         body: JSON.stringify({ employeeId })
@@ -162,7 +162,7 @@ export default function HRDashboard() {
 
   const handleUpdateOverrideRole = async (teamId, memberId, newRolesArray) => {
     try {
-      await fetch(`/api/hr/teams/${teamId}/members/${memberId}`, {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/hr/teams/${teamId}/members/${memberId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', ...headers },
         body: JSON.stringify({ overrideRole: newRolesArray })
@@ -174,7 +174,7 @@ export default function HRDashboard() {
   const handleRemoveMember = async (teamId, memberId) => {
     if (!window.confirm("Remove member from team?")) return;
     try {
-      await fetch(`/api/hr/teams/${teamId}/members/${memberId}`, { method: 'DELETE', headers });
+      await fetch(`${import.meta.env.VITE_API_URL}/api/hr/teams/${teamId}/members/${memberId}`, { method: 'DELETE', headers });
       fetchDashboardData();
     } catch (e) { console.error(e); }
   };
@@ -182,7 +182,7 @@ export default function HRDashboard() {
   const handleDeleteTeam = async (teamId) => {
     if (!window.confirm("Delete this team completely?")) return;
     try {
-      await fetch(`/api/hr/teams/${teamId}`, { method: 'DELETE', headers });
+      await fetch(`${import.meta.env.VITE_API_URL}/api/hr/teams/${teamId}`, { method: 'DELETE', headers });
       fetchDashboardData();
     } catch (e) { console.error(e); }
   }
@@ -190,7 +190,7 @@ export default function HRDashboard() {
   const handleDeleteDocument = async (docId) => {
     if (!window.confirm("Are you sure you want to delete this document and ALL its tasks?")) return;
     try {
-      const res = await fetch(`/api/hr/documents/${docId}`, { method: 'DELETE', headers });
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/hr/documents/${docId}`, { method: 'DELETE', headers });
       const data = await res.json();
       setMessage(data.message);
       if (selectedDocId === docId) setSelectedDocId(null);

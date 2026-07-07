@@ -70,7 +70,7 @@ export default function Login() {
 
     setLoading(true);
 
-    const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+    const endpoint = isLogin ? `${import.meta.env.VITE_API_URL}/api/auth/login` : `${import.meta.env.VITE_API_URL}/api/auth/register`;
     const payload = isLogin
       ? { email, password }
       : { email, password, name, role, designations, department, group };

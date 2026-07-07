@@ -43,9 +43,9 @@ export default function EmployeeDashboard() {
   const fetchDashboardData = async () => {
     try {
       const [tasksRes, teamsRes, perfRes] = await Promise.all([
-        fetch('/api/employee/tasks', { headers }),
-        fetch('/api/employee/teams', { headers }),
-        fetch('/api/employee/analytics/performers', { headers })
+        fetch(`${import.meta.env.VITE_API_URL}/api/employee/tasks`, { headers }),
+        fetch(`${import.meta.env.VITE_API_URL}/api/employee/teams`, { headers }),
+        fetch(`${import.meta.env.VITE_API_URL}/api/employee/analytics/performers`, { headers })
       ]);
       setTasks(await tasksRes.json());
       setTeams(await teamsRes.json());
@@ -62,7 +62,7 @@ export default function EmployeeDashboard() {
   const handleStatusChange = async (newStatus) => {
     setWorkingStatus(newStatus);
     try {
-      await fetch('/api/employee/status', {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/employee/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', ...headers },
         body: JSON.stringify({ workingStatus: newStatus })
@@ -84,7 +84,7 @@ export default function EmployeeDashboard() {
     setTasks(tasks.map(t => t._id === taskId ? { ...t, status: status } : t));
 
     try {
-      await fetch(`/api/employee/tasks/${taskId}/status`, {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/employee/tasks/${taskId}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', ...headers },
         body: JSON.stringify({ status })
@@ -118,7 +118,7 @@ export default function EmployeeDashboard() {
     setProfileMessage('');
     setProfileLoading(true);
     try {
-      const res = await fetch('/api/employee/profile', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/employee/profile`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', ...headers },
         body: JSON.stringify({ 
