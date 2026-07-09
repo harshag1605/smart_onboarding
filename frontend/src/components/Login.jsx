@@ -147,8 +147,8 @@ export default function Login() {
       </div>
 
       {/* Right Panel - Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 relative overflow-y-auto">
-        <div className="w-full max-w-md">
+      <div className="w-full lg:w-1/2 flex flex-col p-6 sm:p-12 relative overflow-y-auto max-h-[100dvh]">
+        <div className="w-full max-w-md mx-auto my-auto py-8 lg:py-0">
           {/* Mobile Header */}
           <div className="lg:hidden flex items-center gap-3 mb-10">
             <div className="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center">
@@ -161,9 +161,26 @@ export default function Login() {
             <h2 className="text-3xl font-bold text-zinc-900 tracking-tight mb-2">
               {isLogin ? 'Welcome back' : 'Create an account'}
             </h2>
-            <p className="text-zinc-500 text-sm mb-8">
+            <p className="text-zinc-500 text-sm mb-6">
               {isLogin ? 'Enter your credentials to access the portal' : 'Get started with AI-driven onboarding today.'}
             </p>
+
+            <div className="flex bg-zinc-100 p-1 rounded-xl mb-8">
+              <button 
+                type="button"
+                onClick={() => { setIsLogin(true); setError(''); }}
+                className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${isLogin ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'}`}
+              >
+                Sign In
+              </button>
+              <button 
+                type="button"
+                onClick={() => { setIsLogin(false); setError(''); }}
+                className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${!isLogin ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'}`}
+              >
+                Sign Up
+              </button>
+            </div>
 
             {error && (
               <div className={`p-4 mb-6 rounded-xl text-sm border flex items-center gap-3 ${error.includes('successful') ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
@@ -296,16 +313,6 @@ export default function Login() {
                   </>
                 )}
               </button>
-
-              <div className="text-center pt-4 border-t border-zinc-100">
-                <p className="text-sm text-zinc-500">
-                  {isLogin ? "Don't have an account?" : "Already have an account?"}{' '}
-                  <button type="button" onClick={() => { setIsLogin(!isLogin); setError(''); }} 
-                          className="font-bold text-zinc-900 hover:text-yellow-600 transition-colors focus:outline-none focus:underline">
-                    {isLogin ? "Create one now" : "Sign in instead"}
-                  </button>
-                </p>
-              </div>
             </form>
           </div>
         </div>
