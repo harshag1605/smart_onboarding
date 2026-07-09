@@ -76,23 +76,27 @@ export default function EmployeeDashboard() {
     e.dataTransfer.setData('taskId', taskId);
   };
 
-  const onDrop = async (e, status) => {
-    e.preventDefault();
-    const taskId = e.dataTransfer.getData('taskId');
-    if (!taskId) return;
-    
-    setTasks(tasks.map(t => t._id === taskId ? { ...t, status: status } : t));
+  const handleUpdateTaskStatus = async (taskId, newStatus) => {
+    setTasks(tasks.map(t => t._id === taskId ? { ...t, status: newStatus } : t));
 
     try {
       await fetch(`${import.meta.env.VITE_API_URL}/api/employee/tasks/${taskId}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', ...headers },
-        body: JSON.stringify({ status })
+        body: JSON.stringify({ status: newStatus })
       });
       fetchDashboardData(); 
     } catch (e) {
       fetchDashboardData();
     }
+  };
+
+  const onDrop = async (e, status) => {
+    e.preventDefault();
+    const taskId = e.dataTransfer.getData('taskId');
+    if (!taskId) return;
+    
+    await handleUpdateTaskStatus(taskId, status);
   };
 
   const onDragOver = (e) => {
@@ -235,9 +239,27 @@ export default function EmployeeDashboard() {
                       </div>
                       <h4 className="font-bold text-sm text-gray-900 leading-snug group-hover:text-yellow-600 transition-colors">{task.title}</h4>
                       <p className="text-xs text-gray-500 mt-2 line-clamp-2 leading-relaxed">{task.description}</p>
-                      <div className="mt-4 pt-3 border-t border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest flex justify-between items-center">
-                        <span className="flex items-center gap-1"><Briefcase size={12}/> {task.requiredDesignation}</span>
-                        {col === 'Open' ? <span className="text-blue-500 bg-blue-50 px-2 py-1 rounded">UNASSIGNED</span> : <span className="text-yellow-600 bg-yellow-50 px-2 py-1 rounded">MINE</span>}
+                      <div className="mt-4 pt-3 border-t border-gray-100 flex flex-col gap-3">
+                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex justify-between items-center">
+                          <span className="flex items-center gap-1"><Briefcase size={12}/> {task.requiredDesignation}</span>
+                          {col === 'Open' ? <span className="text-blue-500 bg-blue-50 px-2 py-1 rounded">UNASSIGNED</span> : <span className="text-yellow-600 bg-yellow-50 px-2 py-1 rounded">MINE</span>}
+                        </div>
+                        {col === 'Todo' && (
+                          <button 
+                            onClick={() => handleUpdateTaskStatus(task._id, 'In Progress')}
+                            className="w-full text-xs font-bold text-yellow-700 bg-yellow-100 hover:bg-yellow-200 py-2 rounded-lg transition-colors flex items-center justify-center gap-1"
+                          >
+                            <PlayCircle size={14}/> Move to In Progress
+                          </button>
+                        )}
+                        {col === 'In Progress' && (
+                          <button 
+                            onClick={() => handleUpdateTaskStatus(task._id, 'Done')}
+                            className="w-full text-xs font-bold text-green-700 bg-green-100 hover:bg-green-200 py-2 rounded-lg transition-colors flex items-center justify-center gap-1"
+                          >
+                            <CheckCircle2 size={14}/> Mark as Done
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
