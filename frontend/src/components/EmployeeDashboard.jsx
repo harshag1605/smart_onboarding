@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
-import { Clock, PlayCircle, CheckCircle2, LayoutDashboard, Users, Trophy, ChevronRight, Award, Briefcase, Star, User } from 'lucide-react';
+import { Clock, PlayCircle, CheckCircle2, LayoutDashboard, Users, Trophy, ChevronRight, ChevronDown, Award, Briefcase, Star, User } from 'lucide-react';
 
 const COLUMNS = ['Open', 'Todo', 'In Progress', 'Done'];
 
@@ -31,6 +31,11 @@ export default function EmployeeDashboard() {
   const [performers, setPerformers] = useState([]);
   const [workingStatus, setWorkingStatus] = useState(user?.workingStatus || 'Available');
   const [activeTab, setActiveTab] = useState('tasks');
+  const [expandedTeams, setExpandedTeams] = useState({});
+
+  const toggleTeamExpand = (teamId) => {
+    setExpandedTeams(prev => ({ ...prev, [teamId]: !prev[teamId] }));
+  };
 
   const [profileName, setProfileName] = useState(user?.name || '');
   const [profileDepartment, setProfileDepartment] = useState(user?.department || '');
@@ -279,25 +284,89 @@ export default function EmployeeDashboard() {
               </div>
             ) : teams.map(team => (
               <div key={team._id} className="bg-white rounded-3xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-12 h-12 rounded-2xl bg-gray-900 flex items-center justify-center text-white font-black text-xl shadow-inner">
+                <div 
+                  className="flex items-center gap-4 mb-6 cursor-pointer group"
+                  onClick={() => toggleTeamExpand(team._id)}
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-gray-900 flex items-center justify-center text-white font-black text-xl shadow-inner group-hover:bg-yellow-500 transition-colors">
                     {team.name.charAt(0)}
                   </div>
-                  <div>
-                    <h3 className="font-black text-lg text-gray-900">{team.name}</h3>
+                  <div className="flex-1">
+                    <h3 className="font-black text-lg text-gray-900 group-hover:text-yellow-600 transition-colors">{team.name}</h3>
                     <p className="text-xs font-bold text-yellow-600 uppercase tracking-wider">My Role: {team.myRole || 'Default Base'}</p>
+                  </div>
+                  <div>
+                    {expandedTeams[team._id] ? <ChevronDown size={20} className="text-gray-400" /> : <ChevronRight size={20} className="text-gray-400" />}
                   </div>
                 </div>
                 
-                <div className="space-y-4">
-                  <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2">Active Projects</h4>
-                  {team.projects && team.projects.length > 0 ? team.projects.map(p => (
-                    <div key={p._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
-                      <span className="text-sm font-bold text-gray-700 flex items-center gap-2"><PlayCircle size={14} className="text-green-500"/> {p.title}</span>
-                      <span className="text-[9px] bg-green-100 text-green-700 font-black px-2 py-1 uppercase rounded-md">Live</span>
+                {expandedTeams[team._id] && (
+                  <div className="space-y-6 mt-4 pt-4 border-t border-gray-100 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div>
+                      <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2 mb-3">Active Projects & Tasks</h4>
+                      {team.projects && team.projects.length > 0 ? team.projects.map(p => {
+                        const projectTasks = tasks.filter(t => t.documentId === p._id);
+                        return (
+                          <div key={p._id} className="mb-4">
+                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 mb-2">
+                              <span className="text-sm font-bold text-gray-700 flex items-center gap-2"><PlayCircle size={14} className="text-green-500"/> {p.title}</span>
+                              <span className="text-[9px] bg-green-100 text-green-700 font-black px-2 py-1 uppercase rounded-md">Live</span>
+                            </div>
+                            
+                            {projectTasks.length > 0 ? (
+                              <div className="pl-4 ml-2 border-l-2 border-gray-100 space-y-3 mt-3">
+                                {projectTasks.map(task => (
+                                  <div key={task._id} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm relative">
+                                    <div className="absolute -left-[25px] top-5 w-2 h-2 rounded-full bg-yellow-400 border-2 border-white box-content"></div>
+                                    <div className="flex justify-between items-start mb-2">
+                                      <h4 className="font-bold text-sm text-gray-900">{task.title}</h4>
+                                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase ${
+                                        task.status === 'Done' ? 'text-green-700 bg-green-100' : 
+                                        task.status === 'Todo' ? 'text-gray-700 bg-gray-100' :
+                                        task.status === 'Open' ? 'text-blue-700 bg-blue-100' :
+                                        'text-yellow-700 bg-yellow-100'
+                                      }`}>
+                                        {task.status}
+                                      </span>
+                                    </div>
+                                    <p className="text-xs text-gray-500 mb-3">{task.description}</p>
+                                    
+                                    <div className="flex gap-2 border-t border-gray-50 pt-3">
+                                      {task.status === 'Todo' && (
+                                        <button 
+                                          onClick={() => handleUpdateTaskStatus(task._id, 'In Progress')}
+                                          className="flex-1 text-[10px] font-bold text-yellow-700 bg-yellow-50 hover:bg-yellow-100 py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1"
+                                        >
+                                          <PlayCircle size={12}/> Start
+                                        </button>
+                                      )}
+                                      {task.status === 'In Progress' && (
+                                        <button 
+                                          onClick={() => handleUpdateTaskStatus(task._id, 'Done')}
+                                          className="flex-1 text-[10px] font-bold text-green-700 bg-green-50 hover:bg-green-100 py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1"
+                                        >
+                                          <CheckCircle2 size={12}/> Done
+                                        </button>
+                                      )}
+                                      {task.status !== 'Todo' && task.status !== 'In Progress' && (
+                                        <span className="text-[10px] text-gray-400 font-bold uppercase flex items-center gap-1 mx-auto">
+                                          {task.status === 'Done' ? <CheckCircle2 size={12} className="text-green-500"/> : <Briefcase size={12}/>}
+                                          {task.status === 'Done' ? 'Completed' : 'Waiting'}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-xs text-gray-400 italic pl-4">No tasks assigned to you for this project yet.</p>
+                            )}
+                          </div>
+                        );
+                      }) : <p className="text-xs text-gray-400 italic">No live projects for this team.</p>}
                     </div>
-                  )) : <p className="text-xs text-gray-400 italic">No live projects for this team.</p>}
-                </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
