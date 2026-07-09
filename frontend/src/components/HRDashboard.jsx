@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { Upload, Users, Briefcase, Plus, AlertCircle, FileText, CheckCircle2, ListTodo, UserPlus, Trash2, Edit3, X, FolderOpen, Play, ChevronDown, ChevronRight, Award, BarChart, Settings } from 'lucide-react';
+import { PREDEFINED_DEPARTMENTS, PREDEFINED_GROUPS } from './Login';
 
 const PREDEFINED_DESIGNATIONS = [
   "Frontend Engineer", "Backend Engineer", "Fullstack Developer", "UI/UX Designer",
@@ -33,6 +34,7 @@ export default function HRDashboard() {
   const [empPassword, setEmpPassword] = useState('');
   const [empDesignations, setEmpDesignations] = useState([]);
   const [empDepartment, setEmpDepartment] = useState('');
+  const [empGroup, setEmpGroup] = useState('');
 
   const [selectedTeamForDraft, setSelectedTeamForDraft] = useState({});
   const [expandedDocs, setExpandedDocs] = useState({});
@@ -136,14 +138,14 @@ export default function HRDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: empName, email: empEmail, password: empPassword,
-          role: 'employee', designations: empDesignations, department: empDepartment
+          role: 'employee', designations: empDesignations, department: empDepartment, group: empGroup
         })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setMessage(data.message);
       setEmpName(''); setEmpEmail(''); setEmpPassword('');
-      setEmpDesignations([]); setEmpDepartment('');
+      setEmpDesignations([]); setEmpDepartment(''); setEmpGroup('');
       fetchDashboardData();
     } catch (err) { setMessage(`Error: ${err.message}`); }
   };
@@ -486,6 +488,18 @@ export default function HRDashboard() {
                 <input type="text" placeholder="Name" value={empName} onChange={e => setEmpName(e.target.value)} required className={inputClass} />
                 <input type="email" placeholder="Email" value={empEmail} onChange={e => setEmpEmail(e.target.value)} required className={inputClass} />
                 <input type="password" placeholder="Password" value={empPassword} onChange={e => setEmpPassword(e.target.value)} required className={inputClass} />
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <select required value={empDepartment} onChange={e => setEmpDepartment(e.target.value)} className={inputClass}>
+                    <option value="" disabled>Select Department</option>
+                    {PREDEFINED_DEPARTMENTS.map(dep => <option key={dep} value={dep}>{dep}</option>)}
+                  </select>
+                  <select required value={empGroup} onChange={e => setEmpGroup(e.target.value)} className={inputClass}>
+                    <option value="" disabled>Select Group</option>
+                    {PREDEFINED_GROUPS.map(grp => <option key={grp} value={grp}>{grp}</option>)}
+                  </select>
+                </div>
+
                 <div className="bg-gray-50/50 border border-gray-200 rounded-xl p-3 max-h-36 overflow-y-auto space-y-2">
                   {PREDEFINED_DESIGNATIONS.map(d => (
                     <label key={d} className="flex items-center gap-2 text-xs text-gray-600">
