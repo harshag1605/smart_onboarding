@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
-import { Upload, Users, Briefcase, Plus, AlertCircle, FileText, CheckCircle2, ListTodo, UserPlus, Trash2, Edit3, X, FolderOpen, Play, ChevronDown, ChevronRight, Award, BarChart, Settings } from 'lucide-react';
+import { Upload, Users, Briefcase, Plus, AlertCircle, FileText, CheckCircle2, ListTodo, UserPlus, Trash2, Edit3, X, FolderOpen, Play, ChevronDown, ChevronRight, Award, BarChart, Settings, User } from 'lucide-react';
 import { PREDEFINED_DEPARTMENTS, PREDEFINED_GROUPS } from './Login';
 import { BubbleLoader, CardSkeleton, ListSkeleton } from './Loaders';
 const PREDEFINED_DESIGNATIONS = [
@@ -235,7 +235,7 @@ export default function HRDashboard() {
         </h1>
         <div className="flex items-center gap-4">
           <div className="flex gap-1">
-            {['dashboard', 'teams', 'tasks'].map(t => (
+            {['dashboard', 'teams', 'tasks', 'profile'].map(t => (
               <button key={t} onClick={() => setTab(t)} className={`text-xs px-3 py-1.5 rounded-lg font-bold uppercase tracking-wider transition-all ${tab === t ? 'bg-yellow-400 text-gray-900' : 'bg-gray-50 text-gray-500 hover:text-gray-900'}`}>
                 {t}
               </button>
@@ -616,7 +616,7 @@ export default function HRDashboard() {
                             {doc.title}
                             <span className={`text-[10px] px-2 py-0.5 rounded-md uppercase ${doc.status === 'Live' ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-700'}`}>{doc.status}</span>
                           </h3>
-                          <p className="text-xs text-gray-500 mt-1">Total Tasks: {totalCount} | Assigned: {assignedCount} | Done: {doneCount}</p>
+                          <p className="text-xs text-gray-500 mt-1">Team: {doc.teamId?.name || 'Unassigned'} | Total Tasks: {totalCount} | Assigned: {assignedCount} | Done: {doneCount}</p>
                         </div>
                       </div>
                     </div>
@@ -666,6 +666,31 @@ export default function HRDashboard() {
             </div>
             </div>
           )}
+        </main>
+      )}
+
+      {tab === 'profile' && (
+        <main className="max-w-3xl mx-auto p-6">
+          <div className={cardClass}>
+            <div className={highlight}></div>
+            <h2 className="text-lg font-bold mb-6 flex items-center gap-2 tracking-tight">
+              <User size={18} className="text-yellow-500" /> HR Profile Information
+            </h2>
+            <div className="space-y-4">
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Name</p>
+                <p className="font-bold text-gray-900 text-lg">{user?.name}</p>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Email</p>
+                <p className="font-bold text-gray-900 text-lg">{user?.email}</p>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Role</p>
+                <p className="font-bold text-gray-900 text-lg uppercase">{user?.role}</p>
+              </div>
+            </div>
+          </div>
         </main>
       )}
     </div>
