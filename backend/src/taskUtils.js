@@ -2,6 +2,7 @@ import { Task, Team, Document } from './models.js';
 
 export const autoAssignTeamTasks = async (documentId, teamId) => {
   const tasksToAssign = await Task.find({ documentId, status: 'Todo' });
+  if (tasksToAssign.length === 0) return;
   const team = await Team.findById(teamId).populate('members.employee');
   if (!team) return;
 
@@ -26,6 +27,8 @@ export const autoAssignTeamTasks = async (documentId, teamId) => {
     tasksByRole[task.requiredDesignation].push(task);
   }
 
+  const bulkOps = [];
+
   for (const role in tasksByRole) {
     const roleTasks = tasksByRole[role];
     const availableEmps = roleToEmployees[role] || [];
@@ -35,17 +38,27 @@ export const autoAssignTeamTasks = async (documentId, teamId) => {
         const task = roleTasks[i];
         const empId = availableEmps[i % availableEmps.length];
         
-        task.assignedEmployee = empId;
-        task.isNullCluster = false;
-        await task.save();
+        bulkOps.push({
+          updateOne: {
+            filter: { _id: task._id },
+            update: { assignedEmployee: empId, isNullCluster: false }
+          }
+        });
       }
     } else {
       for (const task of roleTasks) {
-        task.assignedEmployee = null;
-        task.isNullCluster = true;
-        await task.save();
+        bulkOps.push({
+          updateOne: {
+            filter: { _id: task._id },
+            update: { assignedEmployee: null, isNullCluster: true }
+          }
+        });
       }
     }
+  }
+
+  if (bulkOps.length > 0) {
+    await Task.bulkWrite(bulkOps);
   }
 };
 
