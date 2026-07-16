@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { Upload, Users, Briefcase, Plus, AlertCircle, FileText, CheckCircle2, ListTodo, UserPlus, Trash2, Edit3, X, FolderOpen, Play, ChevronDown, ChevronRight, Award, BarChart, Settings } from 'lucide-react';
 import { PREDEFINED_DEPARTMENTS, PREDEFINED_GROUPS } from './Login';
-
+import { BubbleLoader, CardSkeleton, ListSkeleton } from './Loaders';
 const PREDEFINED_DESIGNATIONS = [
   "Frontend Engineer", "Backend Engineer", "Fullstack Developer", "UI/UX Designer",
   "QA Engineer", "Automation Tester", "DevOps Engineer", "Cloud Architect",
@@ -41,10 +41,16 @@ export default function HRDashboard() {
   const [teamAddTabs, setTeamAddTabs] = useState({});
   const [editingRolesId, setEditingRolesId] = useState(null);
 
+  const [isFetching, setIsFetching] = useState(true);
+  const [creatingTeam, setCreatingTeam] = useState(false);
+  const [creatingEmployee, setCreatingEmployee] = useState(false);
+  const [makingLive, setMakingLive] = useState({});
+
   const headers = { Authorization: `Bearer ${token}` };
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = async (initial = false) => {
     try {
+      if (initial) setIsFetching(true);
       const opts = { headers };
       const [empRes, teamRes, taskRes, docRes, perfRes] = await Promise.all([
         fetch(`${import.meta.env.VITE_API_URL}/api/hr/employees`, opts),
@@ -65,11 +71,13 @@ export default function HRDashboard() {
       setPerformers(await perfRes.json());
     } catch (e) {
       console.error(e);
+    } finally {
+      if (initial) setIsFetching(false);
     }
   };
 
   useEffect(() => {
-    fetchDashboardData();
+    fetchDashboardData(true);
   }, [token]);
 
   const handleUpload = async (e) => {
@@ -103,6 +111,7 @@ export default function HRDashboard() {
       alert('Please select a team before making the project Live.');
       return;
     }
+    setMakingLive(prev => ({ ...prev, [docId]: true }));
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/hr/documents/${docId}/live`, {
         method: 'POST',
@@ -114,11 +123,14 @@ export default function HRDashboard() {
       fetchDashboardData();
     } catch (e) {
       console.error(e);
+    } finally {
+      setMakingLive(prev => ({ ...prev, [docId]: false }));
     }
   };
 
   const handleCreateTeam = async (e) => {
     e.preventDefault();
+    setCreatingTeam(true);
     try {
       await fetch(`${import.meta.env.VITE_API_URL}/api/hr/teams`, {
         method: 'POST',
@@ -128,10 +140,12 @@ export default function HRDashboard() {
       setNewTeamName('');
       fetchDashboardData();
     } catch (e) { console.error(e); }
+    finally { setCreatingTeam(false); }
   };
 
   const handleAddEmployee = async (e) => {
     e.preventDefault();
+    setCreatingEmployee(true);
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
         method: 'POST',
@@ -148,6 +162,7 @@ export default function HRDashboard() {
       setEmpDesignations([]); setEmpDepartment(''); setEmpGroup('');
       fetchDashboardData();
     } catch (err) { setMessage(`Error: ${err.message}`); }
+    finally { setCreatingEmployee(false); }
   };
 
   const handleAddMemberToTeam = async (teamId, employeeId) => {
@@ -241,7 +256,19 @@ export default function HRDashboard() {
 
       {tab === 'dashboard' && (
         <main className="max-w-7xl mx-auto p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="space-y-6">
+          {isFetching ? (
+            <>
+              <div className="space-y-6">
+                <CardSkeleton />
+                <CardSkeleton />
+              </div>
+              <div className="md:col-span-2 space-y-6">
+                <CardSkeleton />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="space-y-6">
             <div className={cardClass}>
               <div className={highlight}></div>
               <h2 className="text-lg font-bold mb-4 flex items-center gap-2 tracking-tight">
@@ -251,7 +278,7 @@ export default function HRDashboard() {
                 <input type="text" placeholder="Project Title" value={docTitle} onChange={e => setDocTitle(e.target.value)} required className={inputClass} />
                 <input type="file" accept=".pdf,.txt,.docx" onChange={e => setFile(e.target.files?.[0] || null)} required className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-yellow-400 file:text-black hover:file:bg-yellow-300 cursor-pointer" />
                 <button disabled={!file || !docTitle || uploading} type="submit" className="w-full bg-gradient-to-b from-yellow-300 to-yellow-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_4px_10px_rgba(234,179,8,0.2)] text-black font-bold py-2.5 rounded-xl hover:from-yellow-200 hover:to-yellow-400 disabled:opacity-50 transition-all flex justify-center items-center gap-2 uppercase tracking-wider">
-                  {uploading ? 'Processing...' : 'Create Draft'}
+                  {uploading ? <BubbleLoader size="md" color="black" /> : 'Create Draft'}
                 </button>
               </form>
             </div>
@@ -287,8 +314,8 @@ export default function HRDashboard() {
                         ))}
                       </div>
 
-                      <button onClick={() => handleMakeLive(doc._id)} className="w-full text-xs bg-gray-900 text-white py-2 rounded-lg font-bold uppercase tracking-wider flex justify-center items-center gap-1 hover:bg-gray-800 transition-colors shadow-sm">
-                        <Play size={12}/> Make Live
+                      <button disabled={makingLive[doc._id]} onClick={() => handleMakeLive(doc._id)} className="w-full text-xs bg-gray-900 text-white py-2 rounded-lg font-bold uppercase tracking-wider flex justify-center items-center gap-1 hover:bg-gray-800 transition-colors shadow-sm disabled:opacity-75">
+                        {makingLive[doc._id] ? <BubbleLoader size="sm" color="white" /> : <><Play size={12}/> Make Live</>}
                       </button>
                     </div>
                   ))}
@@ -335,12 +362,27 @@ export default function HRDashboard() {
               )}
             </div>
           </div>
+            </>
+          )}
         </main>
       )}
 
       {tab === 'teams' && (
         <main className="max-w-7xl mx-auto p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2 space-y-6">
+          {isFetching ? (
+            <>
+              <div className="md:col-span-2 space-y-6">
+                <CardSkeleton />
+              </div>
+              <div className="space-y-6">
+                <CardSkeleton />
+                <CardSkeleton />
+                <CardSkeleton />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="md:col-span-2 space-y-6">
             <div className={cardClass}>
               <div className={highlight}></div>
               <h2 className="text-lg font-bold mb-4 flex items-center gap-2 tracking-tight">
@@ -348,7 +390,9 @@ export default function HRDashboard() {
               </h2>
               <form onSubmit={handleCreateTeam} className="flex gap-2 mb-6">
                 <input type="text" placeholder="New Team Name" value={newTeamName} onChange={e => setNewTeamName(e.target.value)} required className={inputClass} />
-                <button type="submit" className="bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-gray-800 whitespace-nowrap">Create Team</button>
+                <button type="submit" disabled={creatingTeam} className="bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-gray-800 whitespace-nowrap min-w-[120px] flex justify-center items-center disabled:opacity-75">
+                  {creatingTeam ? <BubbleLoader size="sm" color="white" /> : 'Create Team'}
+                </button>
               </form>
               
               <div className="space-y-6">
@@ -510,7 +554,9 @@ export default function HRDashboard() {
                     </label>
                   ))}
                 </div>
-                <button type="submit" className="w-full bg-gray-900 text-white font-bold py-2.5 rounded-xl hover:bg-gray-800 text-sm">Create Employee</button>
+                <button type="submit" disabled={creatingEmployee} className="w-full bg-gray-900 text-white font-bold py-2.5 rounded-xl hover:bg-gray-800 text-sm flex justify-center items-center disabled:opacity-75">
+                  {creatingEmployee ? <BubbleLoader size="md" color="white" /> : 'Create Employee'}
+                </button>
               </form>
             </div>
 
@@ -538,12 +584,15 @@ export default function HRDashboard() {
               </div>
             </div>
           </div>
+            </>
+          )}
         </main>
       )}
 
       {tab === 'tasks' && (
         <main className="max-w-7xl mx-auto p-6">
-          <div className={cardClass}>
+          {isFetching ? <CardSkeleton /> : (
+            <div className={cardClass}>
             <div className={highlight}></div>
             <h2 className="text-lg font-bold mb-6 flex items-center gap-2 tracking-tight">
               <BarChart size={18} className="text-yellow-500" /> DOM Tree Project Overview
@@ -615,7 +664,8 @@ export default function HRDashboard() {
                 )
               })}
             </div>
-          </div>
+            </div>
+          )}
         </main>
       )}
     </div>

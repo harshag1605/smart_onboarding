@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { Clock, PlayCircle, CheckCircle2, LayoutDashboard, Users, Trophy, ChevronRight, ChevronDown, Award, Briefcase, Star, User } from 'lucide-react';
+import { BubbleLoader, CardSkeleton, ListSkeleton } from './Loaders';
 
 const COLUMNS = ['Open', 'Todo', 'In Progress', 'Done'];
 
@@ -43,10 +44,12 @@ export default function EmployeeDashboard() {
   const [profileDesignations, setProfileDesignations] = useState(user?.designations || []);
   const [profileMessage, setProfileMessage] = useState('');
   const [profileLoading, setProfileLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
   const headers = { Authorization: `Bearer ${token}` };
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = async (initial = false) => {
     try {
+      if (initial) setIsFetching(true);
       const [tasksRes, teamsRes, perfRes] = await Promise.all([
         fetch(`${import.meta.env.VITE_API_URL}/api/employee/tasks`, { headers }),
         fetch(`${import.meta.env.VITE_API_URL}/api/employee/teams`, { headers }),
@@ -57,11 +60,13 @@ export default function EmployeeDashboard() {
       setPerformers(await perfRes.json());
     } catch (e) {
       console.error(e);
+    } finally {
+      if (initial) setIsFetching(false);
     }
   };
 
   useEffect(() => {
-    fetchDashboardData();
+    fetchDashboardData(true);
   }, [token]);
 
   const handleStatusChange = async (newStatus) => {
@@ -177,6 +182,15 @@ export default function EmployeeDashboard() {
       </nav>
 
       <main className="max-w-7xl mx-auto p-6">
+        {isFetching ? (
+          <>
+            <CardSkeleton />
+            <div className="mt-8">
+              <CardSkeleton />
+            </div>
+          </>
+        ) : (
+          <>
         {/* Professional Header Section */}
         <div className="bg-white/80 backdrop-blur-xl bg-gradient-to-b from-white/60 to-gray-100/80 p-6 rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.1)] border border-gray-200 relative overflow-hidden mb-8 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
@@ -468,12 +482,14 @@ export default function EmployeeDashboard() {
               </div>
 
               <div className="pt-4 flex justify-end">
-                <button type="submit" disabled={profileLoading} className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold px-8 py-3 rounded-xl transition-all shadow-sm flex items-center gap-2">
-                  {profileLoading ? 'Saving...' : 'Save Profile'}
+                <button type="submit" disabled={profileLoading} className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold px-8 py-3 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 min-w-[160px] disabled:opacity-75">
+                  {profileLoading ? <BubbleLoader size="md" color="black" /> : 'Save Profile'}
                 </button>
               </div>
             </form>
           </div>
+        )}
+          </>
         )}
       </main>
     </div>
