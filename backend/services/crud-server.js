@@ -223,7 +223,9 @@ app.delete('/api/hr/teams/:id', checkDb, authMiddleware, async (req, res) => {
 // Analytics
 app.get('/api/hr/analytics/performers', checkDb, authMiddleware, async (req, res) => {
   try {
-    const completedTasks = await Task.find({ status: 'Done', assignedEmployee: { $ne: null } }).populate('assignedEmployee', 'name email');
+    const docs = await Document.find({ createdBy: req.user.id });
+    const docIds = docs.map(d => d._id);
+    const completedTasks = await Task.find({ status: 'Done', assignedEmployee: { $ne: null }, documentId: { $in: docIds } }).populate('assignedEmployee', 'name email');
     const counts = {};
     completedTasks.forEach(t => {
       const empId = t.assignedEmployee._id.toString();
