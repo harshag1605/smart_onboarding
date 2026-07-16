@@ -67,7 +67,7 @@ app.post('/api/hr/groups', checkDb, authMiddleware, async (req, res) => {
 // Document endpoints (excluding upload)
 app.get('/api/hr/documents', checkDb, authMiddleware, async (req, res) => {
   try {
-    const docs = await Document.find().populate('teamId').sort({ uploadedAt: -1 });
+    const docs = await Document.find({ createdBy: req.user.id }).populate('teamId').sort({ uploadedAt: -1 });
     res.json(docs);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -121,7 +121,8 @@ app.get('/api/hr/null-cluster', checkDb, authMiddleware, async (req, res) => {
 
 app.get('/api/hr/tasks', checkDb, authMiddleware, async (req, res) => {
   try {
-    const tasks = await Task.find().populate('assignedEmployee', 'name designations');
+    const docs = await Document.find({ createdBy: req.user.id }).select('_id');
+    const tasks = await Task.find({ documentId: { $in: docs.map(d => d._id) } }).populate('assignedEmployee', 'name designations');
     res.json(tasks);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -140,7 +141,7 @@ app.delete('/api/hr/tasks/:id', checkDb, authMiddleware, async (req, res) => {
 // Teams CRUD
 app.get('/api/hr/teams', checkDb, authMiddleware, async (req, res) => {
   try {
-    const teams = await Team.find().populate('members.employee', 'name email designations workingStatus');
+    const teams = await Team.find({ createdBy: req.user.id }).populate('members.employee', 'name email designations workingStatus');
     res.json(teams);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -150,7 +151,7 @@ app.get('/api/hr/teams', checkDb, authMiddleware, async (req, res) => {
 app.post('/api/hr/teams', checkDb, authMiddleware, async (req, res) => {
   try {
     const { name } = req.body;
-    const team = await Team.create({ name, members: [] });
+    const team = await Team.create({ name, createdBy: req.user.id, members: [] });
     res.json(team);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -270,7 +271,7 @@ app.get('/api/employee/tasks', checkDb, authMiddleware, async (req, res) => {
     const assignedTasks = await Task.find({ 
       assignedEmployee: req.user.id,
       documentId: { $in: docIds }
-    });
+    }).populate({ path: 'documentId', select: 'createdBy title', populate: { path: 'createdBy', select: 'name' } });
     
     const clusterTasks = [];
     for (const doc of docs) {
@@ -286,7 +287,7 @@ app.get('/api/employee/tasks', checkDb, authMiddleware, async (req, res) => {
         assignedEmployee: null,
         documentId: doc._id,
         requiredDesignation: { $in: allowedRoles }
-      });
+      }).populate({ path: 'documentId', select: 'createdBy title', populate: { path: 'createdBy', select: 'name' } });
       clusterTasks.push(...tasks);
     }
     
@@ -302,7 +303,7 @@ app.get('/api/employee/teams', checkDb, authMiddleware, async (req, res) => {
   try {
     const teams = await Team.find({ 'members.employee': req.user.id });
     const enrichedTeams = await Promise.all(teams.map(async team => {
-      const projects = await Document.find({ teamId: team._id, status: 'Live' }).select('title status');
+      const projects = await Document.find({ teamId: team._id, status: 'Live' }).select('title status createdBy').populate('createdBy', 'name');
       const memberInfo = team.members.find(m => m.employee.toString() === req.user.id);
       return { ...team.toObject(), projects, myRole: memberInfo?.overrideRole };
     }));

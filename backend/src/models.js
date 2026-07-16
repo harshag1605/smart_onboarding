@@ -30,6 +30,7 @@ const GroupSchema = new mongoose.Schema({
 
 const TeamSchema = new mongoose.Schema({
   name: { type: String, required: true, unique: true },
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   members: [{
     employee: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     overrideRole: { type: [String], default: [] }
@@ -42,7 +43,8 @@ const DocumentSchema = new mongoose.Schema({
   content: { type: String, required: true },
   uploadedAt: { type: Date, default: Date.now },
   status: { type: String, enum: ['Draft', 'Live'], default: 'Draft' },
-  teamId: { type: mongoose.Schema.Types.ObjectId, ref: 'Team', default: null }
+  teamId: { type: mongoose.Schema.Types.ObjectId, ref: 'Team', default: null },
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 });
 
 export const User = mongoose.model('User', UserSchema);

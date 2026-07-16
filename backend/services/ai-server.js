@@ -33,7 +33,7 @@ app.post('/api/hr/upload', checkDb, authMiddleware, upload.single('document'), a
       textContent = buffer.toString('utf-8');
     }
 
-    const doc = await Document.create({ title, name: originalname, content: textContent });
+    const doc = await Document.create({ title, name: originalname, content: textContent, createdBy: req.user.id });
 
     await generateAndAssignTasks(doc._id, textContent);
 

@@ -256,7 +256,12 @@ export default function EmployeeDashboard() {
                         </span>
                         <span className="text-[10px] text-gray-400 font-bold uppercase flex items-center gap-1"><Clock size={12}/>{task.estimatedTime}</span>
                       </div>
-                      <h4 className="font-bold text-sm text-gray-900 leading-snug group-hover:text-yellow-600 transition-colors">{task.title}</h4>
+                      <div className="flex justify-between items-start gap-2 mb-2">
+                        <h4 className="font-bold text-sm text-gray-900 leading-snug group-hover:text-yellow-600 transition-colors">{task.title}</h4>
+                      </div>
+                      <div className="text-[10px] font-bold text-gray-500 mb-2 flex items-center gap-1">
+                        <User size={12} className="text-gray-400"/> Assigned by HR: <span className="text-gray-900">{task.documentId?.createdBy?.name || 'System'}</span>
+                      </div>
                       <p className="text-xs text-gray-500 mt-2 line-clamp-2 leading-relaxed">{task.description}</p>
                       <div className="mt-4 pt-3 border-t border-gray-100 flex flex-col gap-3">
                         <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex justify-between items-center">
@@ -319,11 +324,19 @@ export default function EmployeeDashboard() {
                     <div>
                       <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2 mb-3">Active Projects & Tasks</h4>
                       {team.projects && team.projects.length > 0 ? team.projects.map(p => {
-                        const projectTasks = tasks.filter(t => t.documentId === p._id);
+                        const projectTasks = tasks.filter(t => {
+                          const tDocId = t.documentId?._id || t.documentId;
+                          return tDocId === p._id;
+                        });
                         return (
                           <div key={p._id} className="mb-4">
                             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 mb-2">
-                              <span className="text-sm font-bold text-gray-700 flex items-center gap-2"><PlayCircle size={14} className="text-green-500"/> {p.title}</span>
+                              <div>
+                                <span className="text-sm font-bold text-gray-700 flex items-center gap-2"><PlayCircle size={14} className="text-green-500"/> {p.title}</span>
+                                <div className="text-[10px] text-gray-500 font-semibold flex items-center gap-1 mt-1 ml-5">
+                                  <User size={10}/> By HR: {p.createdBy?.name || 'System'}
+                                </div>
+                              </div>
                               <span className="text-[9px] bg-green-100 text-green-700 font-black px-2 py-1 uppercase rounded-md">Live</span>
                             </div>
                             
