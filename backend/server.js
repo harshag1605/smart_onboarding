@@ -39,22 +39,26 @@ startService(path.join(__dirname, 'services', 'crud-server.js'), 'CRUD Service')
 // Note: We do not use express.json() here because it consumes the body, 
 // which breaks HTTP proxying for POST/PUT requests (especially file uploads).
 
-app.use(createProxyMiddleware('/api/auth', {
+app.use(createProxyMiddleware({
+  pathFilter: '/api/auth',
   target: 'http://localhost:3001',
   changeOrigin: true
 }));
 
-app.use(createProxyMiddleware('/api/hr/upload', {
+app.use(createProxyMiddleware({
+  pathFilter: '/api/hr/upload',
   target: 'http://localhost:3002',
   changeOrigin: true
 }));
 
-app.use(createProxyMiddleware('/api/hr', {
+app.use(createProxyMiddleware({
+  pathFilter: '/api/hr',
   target: 'http://localhost:3003',
   changeOrigin: true
 }));
 
-app.use(createProxyMiddleware('/api/employee', {
+app.use(createProxyMiddleware({
+  pathFilter: '/api/employee',
   target: 'http://localhost:3003',
   changeOrigin: true
 }));
