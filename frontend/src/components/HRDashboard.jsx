@@ -12,7 +12,7 @@ const PREDEFINED_DESIGNATIONS = [
 ];
 
 export default function HRDashboard() {
-  const { token, logout } = useAuth();
+  const { user, token, logout } = useAuth();
   const [employees, setEmployees] = useState([]);
   const [teams, setTeams] = useState([]);
   const [performers, setPerformers] = useState([]);
