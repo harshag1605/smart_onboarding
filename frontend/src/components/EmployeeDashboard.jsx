@@ -32,6 +32,7 @@ export default function EmployeeDashboard() {
   const [performers, setPerformers] = useState([]);
   const [workingStatus, setWorkingStatus] = useState(user?.workingStatus || 'Available');
   const [activeTab, setActiveTab] = useState('tasks');
+  const [selectedTeamFilter, setSelectedTeamFilter] = useState('ALL');
   const [expandedTeams, setExpandedTeams] = useState({});
 
   const toggleTeamExpand = (teamId) => {
@@ -152,6 +153,18 @@ export default function EmployeeDashboard() {
     }
   };
 
+  const uniqueTeams = Array.from(
+    new Map(
+      tasks
+        .filter(t => t.documentId?.teamId)
+        .map(t => [t.documentId.teamId._id, { id: t.documentId.teamId._id, name: t.documentId.teamId.name }])
+    ).values()
+  );
+
+  const displayedTasks = selectedTeamFilter === 'ALL' 
+    ? tasks 
+    : tasks.filter(t => t.documentId?.teamId?._id === selectedTeamFilter);
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 font-sans bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-white via-gray-50 to-gray-200">
       <nav className="bg-white/50 backdrop-blur-xl border-b border-gray-200 px-6 py-4 flex flex-col md:flex-row justify-between items-center shadow-[0_4px_20px_rgba(0,0,0,0.3)] sticky top-0 z-10 gap-4 md:gap-0">
@@ -223,6 +236,26 @@ export default function EmployeeDashboard() {
 
         {/* Tab Contents */}
         {activeTab === 'tasks' && (
+          <div className="mb-6 flex flex-wrap gap-2">
+            <button 
+              onClick={() => setSelectedTeamFilter('ALL')} 
+              className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors shadow-sm ${selectedTeamFilter === 'ALL' ? 'bg-gray-900 text-white' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'}`}
+            >
+              All Projects
+            </button>
+            {uniqueTeams.map(team => (
+              <button 
+                key={team.id}
+                onClick={() => setSelectedTeamFilter(team.id)}
+                className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors shadow-sm ${selectedTeamFilter === team.id ? 'bg-gray-900 text-white' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'}`}
+              >
+                {team.name}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {activeTab === 'tasks' && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {COLUMNS.map(col => (
               <div 
@@ -238,12 +271,12 @@ export default function EmployeeDashboard() {
                   {col === 'Done' && <div className="w-2 h-2 rounded-full bg-green-500"></div>}
                   <h3 className="font-bold text-gray-900 uppercase tracking-wider text-xs">{col === 'Open' ? 'TEAM BACKLOG' : col}</h3>
                   <span className="ml-auto bg-white border border-gray-200 text-gray-600 text-[10px] py-1 px-2.5 rounded-full font-black shadow-sm">
-                    {tasks.filter(t => t.status === col).length}
+                    {displayedTasks.filter(t => t.status === col).length}
                   </span>
                 </div>
                 
                 <div className="space-y-4">
-                  {tasks.filter(t => t.status === col).map(task => (
+                  {displayedTasks.filter(t => t.status === col).map(task => (
                     <div
                       key={task._id}
                       draggable
@@ -259,8 +292,9 @@ export default function EmployeeDashboard() {
                       <div className="flex justify-between items-start gap-2 mb-2">
                         <h4 className="font-bold text-sm text-gray-900 leading-snug group-hover:text-yellow-600 transition-colors">{task.title}</h4>
                       </div>
-                      <div className="text-[10px] font-bold text-gray-500 mb-2 flex items-center gap-1">
-                        <User size={12} className="text-gray-400"/> Assigned by HR: <span className="text-gray-900">{task.documentId?.createdBy?.name || 'System'}</span>
+                      <div className="text-[10px] font-bold text-gray-500 mb-2 flex items-center gap-1 flex-wrap">
+                        <User size={12} className="text-gray-400"/> HR: <span className="text-gray-900 mr-2">{task.documentId?.createdBy?.name || 'System'}</span>
+                        <Briefcase size={12} className="text-gray-400"/> Team: <span className="text-gray-900">{task.documentId?.teamId?.name || 'Unassigned'}</span>
                       </div>
                       <p className="text-xs text-gray-500 mt-2 line-clamp-2 leading-relaxed">{task.description}</p>
                       <div className="mt-4 pt-3 border-t border-gray-100 flex flex-col gap-3">

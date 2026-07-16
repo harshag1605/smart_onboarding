@@ -271,7 +271,7 @@ app.get('/api/employee/tasks', checkDb, authMiddleware, async (req, res) => {
     const assignedTasks = await Task.find({ 
       assignedEmployee: req.user.id,
       documentId: { $in: docIds }
-    }).populate({ path: 'documentId', select: 'createdBy title', populate: { path: 'createdBy', select: 'name' } });
+    }).populate({ path: 'documentId', select: 'createdBy title teamId', populate: [ { path: 'createdBy', select: 'name' }, { path: 'teamId', select: 'name' } ] });
     
     const clusterTasks = [];
     for (const doc of docs) {
@@ -287,7 +287,7 @@ app.get('/api/employee/tasks', checkDb, authMiddleware, async (req, res) => {
         assignedEmployee: null,
         documentId: doc._id,
         requiredDesignation: { $in: allowedRoles }
-      }).populate({ path: 'documentId', select: 'createdBy title', populate: { path: 'createdBy', select: 'name' } });
+      }).populate({ path: 'documentId', select: 'createdBy title teamId', populate: [ { path: 'createdBy', select: 'name' }, { path: 'teamId', select: 'name' } ] });
       clusterTasks.push(...tasks);
     }
     
